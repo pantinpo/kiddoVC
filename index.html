@@ -83,6 +83,152 @@
       box-shadow: 0 14px 40px #48377712;
     }
 
+    .leaderboard {
+      margin-top: 20px;
+    }
+
+    .leaderboard h2 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    .leaderboard-intro {
+      margin: 6px 0 17px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    #leaderboard-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 13px;
+      border-radius: 13px;
+      background: #f8f6fc;
+    }
+
+    .player-row + .player-row { margin-top: 8px; }
+
+    .player-rank {
+      color: var(--purple-dark);
+      font-weight: 900;
+    }
+
+    .player-name {
+      overflow: hidden;
+      font-weight: 800;
+      text-overflow: ellipsis;
+    }
+
+    .player-wins {
+      color: var(--muted);
+      font-size: .88rem;
+      font-weight: 700;
+    }
+
+    .leaderboard-status {
+      min-height: 22px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .player-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .change-name {
+      padding: 6px 10px;
+      border: 0;
+      border-radius: 10px;
+      background: #f0ebff;
+      color: var(--purple-dark);
+      font-size: .82rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .name-dialog {
+      width: min(calc(100% - 28px), 420px);
+      padding: 0;
+      border: 0;
+      border-radius: 24px;
+      color: var(--ink);
+      box-shadow: 0 20px 70px #30274b44;
+    }
+
+    .name-dialog::backdrop { background: #30274b88; }
+
+    .name-form { padding: 28px; }
+
+    .name-form h2 {
+      margin: 0 0 8px;
+      font-size: 1.65rem;
+    }
+
+    .name-form p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .name-form label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: .9rem;
+      font-weight: 800;
+    }
+
+    .name-form input {
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 13px;
+      border: 2px solid #d8d1e8;
+      border-radius: 12px;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    .name-form input:focus {
+      border-color: var(--purple);
+      outline: 3px solid #7556db33;
+    }
+
+    .name-help {
+      display: block;
+      margin: 8px 0 16px;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    .save-name {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--purple);
+      color: white;
+      font-size: .95rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--purple-dark);
+    }
+
+    .save-name:hover { background: var(--purple-dark); }
+
     .game-top {
       display: flex;
       align-items: center;
@@ -313,12 +459,38 @@
         <p class="keyboard-hint">Tip: you can click a letter or type it on your keyboard.</p>
         <button class="play-again" id="play-again" type="button">Play again ✨</button>
       </div>
+
+      <div class="player-bar">
+        <span>Playing as <strong id="player-name">guest</strong></span>
+        <button class="change-name" id="change-name" type="button">Change name</button>
+      </div>
+    </section>
+
+    <section class="card leaderboard" aria-labelledby="leaderboard-title">
+      <h2 id="leaderboard-title">🏆 Top word wizards</h2>
+      <p class="leaderboard-intro">Players with the most solved words</p>
+      <ol id="leaderboard-list" aria-label="Leaderboard"></ol>
+      <p class="leaderboard-status" id="leaderboard-status" aria-live="polite"></p>
     </section>
     <p class="footer-note">Wrong guesses build your robot. You have got this!</p>
-  </main>
+    </main>
 
-  <script>
-    const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+    <dialog class="name-dialog" id="name-dialog" aria-labelledby="name-title">
+      <form class="name-form" id="name-form">
+        <h2 id="name-title">What should we call you?</h2>
+        <p>Pick a fun nickname. Your browser will remember it, and it will appear on the shared leaderboard. Please don’t use your full name or private information.</p>
+        <label for="name-input">Your nickname</label>
+        <input id="name-input" name="playerName" maxlength="18" autocomplete="nickname" required pattern="[A-Za-z0-9 _\-]{1,18}">
+        <span class="name-help">Up to 18 letters, numbers, spaces, dashes, or underscores.</span>
+        <button class="save-name" type="submit">Let’s play!</button>
+      </form>
+    </dialog>
+
+    <script>
+      const SUPABASE_URL = "https://awfurgtgkyizhqxfkygn.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3ZnVyZ3Rna3lpemhxeGZreWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMTYxMzcsImV4cCI6MjEwNjY5MjEzN30.eIp0S2dU5FyCHezJswDzI5_mYdMUT9nxfYuleL6NdTY";
+      const PLAYER_NAME_STORAGE_KEY = "mystery-word-player-name";
+      const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
     const words = [
       { word: "butterfly", category: "Animals" },
       { word: "dinosaur", category: "Animals" },
@@ -342,11 +514,133 @@
     const triesElement = document.querySelector("#tries");
     const categoryElement = document.querySelector("#category");
     const playAgainButton = document.querySelector("#play-again");
+    const nameDialog = document.querySelector("#name-dialog");
+    const nameForm = document.querySelector("#name-form");
+    const nameInput = document.querySelector("#name-input");
+    const playerNameElement = document.querySelector("#player-name");
+    const leaderboardList = document.querySelector("#leaderboard-list");
+    const leaderboardStatus = document.querySelector("#leaderboard-status");
     let answer;
     let guessed = new Set();
     let mistakes = 0;
     let finished = false;
     let previousWord = "";
+    let playerName = "";
+    let nameStorageAvailable = true;
+
+    function hasLeaderboardConfig() {
+      return SUPABASE_URL.startsWith("https://")
+        && SUPABASE_ANON_KEY.length > 0;
+    }
+
+    function showNameDialog() {
+      nameInput.value = playerName;
+      nameDialog.showModal();
+      nameInput.focus();
+    }
+
+    function savePlayerName(event) {
+      event.preventDefault();
+      const newName = nameInput.value.trim();
+      if (!/^[A-Za-z0-9 _-]{1,18}$/.test(newName)) {
+        nameInput.setCustomValidity("Use up to 18 letters, numbers, spaces, dashes, or underscores.");
+        nameInput.reportValidity();
+        return;
+      }
+      nameInput.setCustomValidity("");
+      playerName = newName;
+      playerNameElement.textContent = playerName;
+      try {
+        localStorage.setItem(PLAYER_NAME_STORAGE_KEY, playerName);
+        nameStorageAvailable = true;
+      } catch (error) {
+        nameStorageAvailable = false;
+        leaderboardStatus.textContent = "Your browser could not remember your nickname. It will be forgotten when you close this tab.";
+      }
+      nameDialog.close();
+    }
+
+    nameDialog.addEventListener("cancel", (event) => {
+      if (!playerName) event.preventDefault();
+    });
+
+    function loadPlayerName() {
+      try {
+        playerName = localStorage.getItem(PLAYER_NAME_STORAGE_KEY) || "";
+      } catch (error) {
+        nameStorageAvailable = false;
+        leaderboardStatus.textContent = "Your browser could not remember your nickname. It will be forgotten when you close this tab.";
+      }
+      if (!/^[A-Za-z0-9 _-]{1,18}$/.test(playerName)) playerName = "";
+      playerNameElement.textContent = playerName || "guest";
+    }
+
+    async function loadLeaderboard() {
+      if (!hasLeaderboardConfig()) {
+        leaderboardStatus.textContent = "Shared leaderboard is not connected yet. Ask a grown-up to finish setup.";
+        return;
+      }
+
+      leaderboardStatus.textContent = "Loading the shared leaderboard…";
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/leaderboard?select=player_name,wins&order=wins.desc,player_name.asc&limit=10`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        if (!response.ok) throw new Error(`Leaderboard request failed (${response.status}).`);
+        const players = await response.json();
+        leaderboardList.replaceChildren();
+        for (const [index, player] of players.entries()) {
+          const row = document.createElement("li");
+          row.className = "player-row";
+          const rank = document.createElement("span");
+          rank.className = "player-rank";
+          rank.textContent = `#${index + 1}`;
+          const name = document.createElement("span");
+          name.className = "player-name";
+          name.textContent = player.player_name;
+          const wins = document.createElement("span");
+          wins.className = "player-wins";
+          wins.textContent = `${player.wins} ${player.wins === 1 ? "win" : "wins"}`;
+          row.append(rank, name, wins);
+          leaderboardList.append(row);
+        }
+        leaderboardStatus.textContent = players.length ? "" : "Be the first word wizard on the board!";
+      } catch (error) {
+        leaderboardStatus.textContent = "Could not load the shared leaderboard. Check your connection and ask a grown-up for help.";
+        console.error("Could not load leaderboard:", error);
+      }
+    }
+
+    async function recordWin() {
+      if (!hasLeaderboardConfig()) {
+        leaderboardStatus.textContent = "This win could not be saved to the shared board because it is not connected yet.";
+        return;
+      }
+      if (!playerName) {
+        leaderboardStatus.textContent = "Choose a nickname before your win can be saved.";
+        showNameDialog();
+        return;
+      }
+
+      leaderboardStatus.textContent = "Saving your win…";
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/record_win`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ p_player_name: playerName })
+        });
+        if (!response.ok) throw new Error(`Saving your win failed (${response.status}).`);
+        await loadLeaderboard();
+      } catch (error) {
+        leaderboardStatus.textContent = "Your win could not be saved. Check your connection and ask a grown-up for help.";
+        console.error("Could not save leaderboard win:", error);
+      }
+    }
 
     function startGame() {
       const choices = words.filter((entry) => entry.word !== previousWord);
@@ -418,6 +712,7 @@
         finished = true;
         messageElement.textContent = "You got it! Your robot is cheering for you! 🎉";
         messageElement.className = "message win";
+        recordWin();
       } else if (mistakes === parts.length) {
         finished = true;
         messageElement.textContent = `The word was ${answer.toUpperCase()}. Try another one!`;
@@ -430,11 +725,17 @@
     }
 
     document.addEventListener("keydown", (event) => {
-      if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+      if (nameDialog.open || event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
       guess(event.key.toLowerCase());
     });
 
     playAgainButton.addEventListener("click", startGame);
+    nameForm.addEventListener("submit", savePlayerName);
+    nameInput.addEventListener("input", () => nameInput.setCustomValidity(""));
+    document.querySelector("#change-name").addEventListener("click", showNameDialog);
+    loadPlayerName();
+    if (!playerName) showNameDialog();
+    loadLeaderboard();
     startGame();
   </script>
 </body>
