@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fff9ed">
+  <title>Grown-up word manager</title>
+  <style>
+    :root {
+      font-family: "Trebuchet MS", sans-serif;
+      color: #30274b;
+      background: #fff9ed;
+      --purple: #7556db;
+      --purple-dark: #5438b6;
+      --muted: #756e83;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 30px 16px;
+      background: radial-gradient(circle at 12% 12%, #ffe7a9 0 6px, transparent 7px), #fff9ed;
+    }
+
+    main {
+      width: min(100%, 560px);
+      margin: 0 auto;
+    }
+
+    .back { color: var(--purple-dark); font-weight: 800; text-decoration: none; }
+    .back:hover { text-decoration: underline; }
+
+    h1 { margin: 28px 0 8px; font-size: clamp(2rem, 8vw, 3rem); }
+    .intro { margin: 0 0 22px; color: var(--muted); line-height: 1.5; }
+
+    .card {
+      padding: clamp(20px, 5vw, 30px);
+      border: 2px solid #eee8f7;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 14px 40px #48377712;
+    }
+
+    .card h2 { margin: 0 0 17px; font-size: 1.35rem; }
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: .9rem;
+      font-weight: 800;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 2px solid #d8d1e8;
+      border-radius: 12px;
+      color: #30274b;
+      background: white;
+      font: inherit;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--purple);
+      outline: 3px solid #7556db33;
+    }
+
+    .hint { margin: 6px 0 0; color: var(--muted); font-size: .8rem; }
+
+    button {
+      min-height: 46px;
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 13px;
+      background: var(--purple);
+      color: white;
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--purple-dark);
+    }
+
+    button:hover:not(:disabled) { background: var(--purple-dark); }
+    button:disabled { cursor: wait; opacity: .65; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #ffad53; outline-offset: 3px; }
+
+    .full { width: 100%; }
+    .hidden { display: none; }
+
+    .status {
+      min-height: 24px;
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+
+    .status.error { color: #b33e5b; }
+    .status.success { color: #278558; }
+
+    .signed-in {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .word-list {
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .word-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: #f8f6fc;
+    }
+
+    .word-row + .word-row { margin-top: 7px; }
+    .word-answer { font-weight: 900; }
+    .word-category { color: var(--muted); font-size: .85rem; }
+
+    .security-note {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="./">← Back to the game</a>
+    <h1>Grown-up word manager</h1>
+    <p class="intro">Sign in with the special grown-up account to add new answers for everyone.</p>
+
+    <section class="card" id="login-panel" aria-labelledby="login-heading">
+      <h2 id="login-heading">Grown-up sign in</h2>
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Grown-up email</label>
+          <input id="email" name="email" type="email" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="full" id="login-button" type="submit">Sign in</button>
+        <p class="status" id="login-status" aria-live="polite"></p>
+      </form>
+      <p class="security-note">The grown-up account must be created and approved by an adult in Supabase first. This page does not create accounts.</p>
+    </section>
+
+    <section class="card hidden" id="admin-panel" aria-labelledby="admin-heading">
+      <div class="signed-in">
+        <span>Signed in as <strong id="signed-in-email"></strong></span>
+        <button id="sign-out" type="button">Sign out</button>
+      </div>
+      <h2 id="admin-heading">Add an answer</h2>
+      <form id="word-form">
+        <div class="field">
+          <label for="word">Answer</label>
+          <input id="word" name="word" minlength="2" maxlength="20" pattern="[a-zA-Z]{2,20}" autocomplete="off" required>
+          <p class="hint">2–20 letters, no spaces. The game will show it in lowercase.</p>
+        </div>
+        <div class="field">
+          <label for="category">Clue category</label>
+          <select id="category" name="category" required>
+            <option>Animals</option>
+            <option>Yummy things</option>
+            <option>Nature</option>
+            <option>Amazing things</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <button class="full" id="add-word" type="submit">Add word</button>
+        <p class="status" id="word-status" aria-live="polite"></p>
+      </form>
+      <h2>Extra answers already added</h2>
+      <ul class="word-list" id="word-list"></ul>
+      <p class="security-note">Only this approved grown-up account can add answers. The list is visible to everyone who plays.</p>
+    </section>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://awfurgtgkyizhqxfkygn.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3ZnVyZ3Rna3lpemhxeGZreWduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExMTYxMzcsImV4cCI6MjEwNjY5MjEzN30.eIp0S2dU5FyCHezJswDzI5_mYdMUT9nxfYuleL6NdTY";
+    const TOKEN_STORAGE_KEY = "mystery-word-admin-session";
+    const loginPanel = document.querySelector("#login-panel");
+    const adminPanel = document.querySelector("#admin-panel");
+    const loginForm = document.querySelector("#login-form");
+    const loginStatus = document.querySelector("#login-status");
+    const wordForm = document.querySelector("#word-form");
+    const wordStatus = document.querySelector("#word-status");
+    const wordList = document.querySelector("#word-list");
+    const loginButton = document.querySelector("#login-button");
+    const addWordButton = document.querySelector("#add-word");
+    let accessToken = "";
+
+    function showStatus(element, message, kind = "") {
+      element.textContent = message;
+      element.className = `status${kind ? ` ${kind}` : ""}`;
+    }
+
+    function decodeToken(token) {
+      try {
+        const payload = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(decodeURIComponent(Array.from(atob(payload), (character) =>
+          `%${character.charCodeAt(0).toString(16).padStart(2, "0")}`).join("")));
+      } catch {
+        return null;
+      }
+    }
+
+    function isApprovedAdmin(token) {
+      const claims = decodeToken(token);
+      return claims
+        && claims.exp * 1000 > Date.now()
+        && claims.app_metadata?.is_game_admin === true;
+    }
+
+    function setSignedIn(token) {
+      const claims = decodeToken(token);
+      if (!isApprovedAdmin(token)) {
+        showStatus(loginStatus, "This account is not approved as the word-game admin. Ask the grown-up who set up the game to check the admin setup.", "error");
+        return false;
+      }
+      accessToken = token;
+      sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+      document.querySelector("#signed-in-email").textContent = claims.email || "grown-up";
+      loginPanel.classList.add("hidden");
+      adminPanel.classList.remove("hidden");
+      loadWords();
+      return true;
+    }
+
+    async function readError(response) {
+      const body = await response.json().catch(() => ({}));
+      return body.msg || body.message || body.error_description || body.error || `Request failed (${response.status}).`;
+    }
+
+    async function signIn(event) {
+      event.preventDefault();
+      loginButton.disabled = true;
+      showStatus(loginStatus, "Signing in…");
+      try {
+        const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: document.querySelector("#email").value.trim(),
+            password: document.querySelector("#password").value
+          })
+        });
+        if (!response.ok) throw new Error(await readError(response));
+        const session = await response.json();
+        if (!setSignedIn(session.access_token)) {
+          await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+            method: "POST",
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${session.access_token}` }
+          }).catch(() => {});
+          return;
+        }
+        loginForm.reset();
+        showStatus(wordStatus, "Welcome! Add a new answer below.");
+      } catch (error) {
+        showStatus(loginStatus, error.message, "error");
+        console.error("Admin sign-in failed:", error);
+      } finally {
+        loginButton.disabled = false;
+      }
+    }
+
+    async function loadWords() {
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/game_words?select=word,category&order=word.asc`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` } }
+        );
+        if (!response.ok) throw new Error(await readError(response));
+        const words = await response.json();
+        wordList.replaceChildren();
+        for (const entry of words) {
+          const row = document.createElement("li");
+          row.className = "word-row";
+          const answer = document.createElement("span");
+          answer.className = "word-answer";
+          answer.textContent = entry.word;
+          const category = document.createElement("span");
+          category.className = "word-category";
+          category.textContent = entry.category;
+          row.append(answer, category);
+          wordList.append(row);
+        }
+        if (words.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "word-category";
+          empty.textContent = "No extra answers yet. Add the first one!";
+          wordList.append(empty);
+        }
+      } catch (error) {
+        showStatus(wordStatus, "Could not load the word list. Check that the grown-up setup SQL has been run.", "error");
+        console.error("Admin word list failed to load:", error);
+      }
+    }
+
+    async function addWord(event) {
+      event.preventDefault();
+      addWordButton.disabled = true;
+      showStatus(wordStatus, "Adding answer…");
+      const word = document.querySelector("#word").value.trim().toLowerCase();
+      const category = document.querySelector("#category").value;
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/game_words`, {
+          method: "POST",
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify({ word, category })
+        });
+        if (response.status === 409) {
+          showStatus(wordStatus, "That answer is already in the extra word list.", "error");
+          return;
+        }
+        if (!response.ok) throw new Error(await readError(response));
+        wordForm.reset();
+        showStatus(wordStatus, `"${word}" is in! Refresh the game page to add it to the word choices.`, "success");
+        await loadWords();
+      } catch (error) {
+        showStatus(wordStatus, "Could not add that answer. Check your connection and admin permissions.", "error");
+        console.error("Could not add game word:", error);
+      } finally {
+        addWordButton.disabled = false;
+      }
+    }
+
+    async function signOut() {
+      const token = accessToken;
+      sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+      accessToken = "";
+      try {
+        const response = await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+          method: "POST",
+          headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error(await readError(response));
+      } catch (error) {
+        console.error("Admin session sign-out failed:", error);
+      }
+      adminPanel.classList.add("hidden");
+      loginPanel.classList.remove("hidden");
+      showStatus(loginStatus, "You are signed out.");
+    }
+
+    loginForm.addEventListener("submit", signIn);
+    wordForm.addEventListener("submit", addWord);
+    document.querySelector("#sign-out").addEventListener("click", signOut);
+    try {
+      const savedToken = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+      if (savedToken && !setSignedIn(savedToken)) sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    } catch (error) {
+      showStatus(loginStatus, "This browser could not save the admin session. You can still sign in for this tab.", "error");
+      console.error("Could not restore admin session:", error);
+    }
+  </script>
+</body>
+</html>

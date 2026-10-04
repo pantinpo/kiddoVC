@@ -42,3 +42,32 @@ $$;
 
 revoke all on function public.record_win(text) from public;
 grant execute on function public.record_win(text) to anon, authenticated;
+
+create table if not exists public.game_words (
+  id bigint generated always as identity primary key,
+  word text not null unique check (word ~ '^[a-z]{2,20}$'),
+  category text not null check (category ~ '^[A-Za-z][A-Za-z ]{0,23}$'),
+  created_at timestamptz not null default now()
+);
+
+alter table public.game_words enable row level security;
+
+drop policy if exists "Anyone can read game words" on public.game_words;
+create policy "Anyone can read game words"
+  on public.game_words
+  for select
+  to anon, authenticated
+  using (true);
+
+drop policy if exists "Only game admins can add words" on public.game_words;
+create policy "Only game admins can add words"
+  on public.game_words
+  for insert
+  to authenticated
+  with check (
+    coalesce((select auth.jwt() -> 'app_metadata' ->> 'is_game_admin'), 'false') = 'true'
+  );
+
+grant select on public.game_words to anon, authenticated;
+grant insert on public.game_words to authenticated;
+revoke update, delete, truncate on public.game_words from anon, authenticated;

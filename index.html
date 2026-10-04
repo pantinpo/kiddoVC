@@ -140,6 +140,14 @@
       font-size: .86rem;
     }
 
+    .grown-up-link {
+      color: var(--purple-dark);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .grown-up-link:hover { text-decoration: underline; }
+
     .player-bar {
       display: flex;
       align-items: center;
@@ -472,7 +480,7 @@
       <ol id="leaderboard-list" aria-label="Leaderboard"></ol>
       <p class="leaderboard-status" id="leaderboard-status" aria-live="polite"></p>
     </section>
-    <p class="footer-note">Wrong guesses build your robot. You have got this!</p>
+    <p class="footer-note">Wrong guesses build your robot. You have got this! · <a class="grown-up-link" href="./admin.html">Grown-up word manager</a></p>
     </main>
 
     <dialog class="name-dialog" id="name-dialog" aria-labelledby="name-title">
@@ -492,20 +500,64 @@
       const PLAYER_NAME_STORAGE_KEY = "mystery-word-player-name";
       const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
     const words = [
-      { word: "butterfly", category: "Animals" },
-      { word: "dinosaur", category: "Animals" },
-      { word: "elephant", category: "Animals" },
-      { word: "unicorn", category: "Animals" },
-      { word: "penguin", category: "Animals" },
-      { word: "rainbow", category: "Nature" },
-      { word: "sunshine", category: "Nature" },
-      { word: "volcano", category: "Nature" },
-      { word: "strawberry", category: "Yummy things" },
-      { word: "pancakes", category: "Yummy things" },
-      { word: "cupcake", category: "Yummy things" },
-      { word: "spaceship", category: "Amazing things" },
-      { word: "treasure", category: "Amazing things" },
-      { word: "birthday", category: "Amazing things" }
+      { word: "ant", category: "Animals" }, { word: "bear", category: "Animals" },
+      { word: "beaver", category: "Animals" }, { word: "bee", category: "Animals" },
+      { word: "butterfly", category: "Animals" }, { word: "camel", category: "Animals" },
+      { word: "cheetah", category: "Animals" }, { word: "chicken", category: "Animals" },
+      { word: "dolphin", category: "Animals" }, { word: "dragon", category: "Animals" },
+      { word: "eagle", category: "Animals" }, { word: "elephant", category: "Animals" },
+      { word: "flamingo", category: "Animals" }, { word: "fox", category: "Animals" },
+      { word: "giraffe", category: "Animals" }, { word: "hamster", category: "Animals" },
+      { word: "hedgehog", category: "Animals" }, { word: "jellyfish", category: "Animals" },
+      { word: "kangaroo", category: "Animals" }, { word: "koala", category: "Animals" },
+      { word: "ladybug", category: "Animals" }, { word: "leopard", category: "Animals" },
+      { word: "lion", category: "Animals" }, { word: "monkey", category: "Animals" },
+      { word: "octopus", category: "Animals" }, { word: "owl", category: "Animals" },
+      { word: "panda", category: "Animals" }, { word: "penguin", category: "Animals" },
+      { word: "rabbit", category: "Animals" }, { word: "squirrel", category: "Animals" },
+      { word: "tiger", category: "Animals" }, { word: "turtle", category: "Animals" },
+      { word: "unicorn", category: "Animals" }, { word: "whale", category: "Animals" },
+      { word: "wolf", category: "Animals" }, { word: "zebra", category: "Animals" },
+      { word: "apple", category: "Yummy things" }, { word: "banana", category: "Yummy things" },
+      { word: "blueberry", category: "Yummy things" }, { word: "brownie", category: "Yummy things" },
+      { word: "burger", category: "Yummy things" }, { word: "carrot", category: "Yummy things" },
+      { word: "cheese", category: "Yummy things" }, { word: "chocolate", category: "Yummy things" },
+      { word: "cookie", category: "Yummy things" }, { word: "cupcake", category: "Yummy things" },
+      { word: "donut", category: "Yummy things" }, { word: "grapes", category: "Yummy things" },
+      { word: "lemon", category: "Yummy things" }, { word: "mango", category: "Yummy things" },
+      { word: "noodles", category: "Yummy things" }, { word: "pancakes", category: "Yummy things" },
+      { word: "peach", category: "Yummy things" }, { word: "pineapple", category: "Yummy things" },
+      { word: "popcorn", category: "Yummy things" }, { word: "pretzel", category: "Yummy things" },
+      { word: "pumpkin", category: "Yummy things" }, { word: "sandwich", category: "Yummy things" },
+      { word: "spaghetti", category: "Yummy things" }, { word: "strawberry", category: "Yummy things" },
+      { word: "taco", category: "Yummy things" }, { word: "waffle", category: "Yummy things" },
+      { word: "watermelon", category: "Yummy things" }, { word: "avocado", category: "Yummy things" },
+      { word: "broccoli", category: "Yummy things" }, { word: "marshmallow", category: "Yummy things" },
+      { word: "cloud", category: "Nature" }, { word: "comet", category: "Nature" },
+      { word: "desert", category: "Nature" }, { word: "flower", category: "Nature" },
+      { word: "forest", category: "Nature" }, { word: "fountain", category: "Nature" },
+      { word: "island", category: "Nature" }, { word: "lightning", category: "Nature" },
+      { word: "meadow", category: "Nature" }, { word: "mountain", category: "Nature" },
+      { word: "ocean", category: "Nature" }, { word: "planet", category: "Nature" },
+      { word: "rainbow", category: "Nature" }, { word: "river", category: "Nature" },
+      { word: "snowflake", category: "Nature" }, { word: "sunshine", category: "Nature" },
+      { word: "tornado", category: "Nature" }, { word: "volcano", category: "Nature" },
+      { word: "waterfall", category: "Nature" }, { word: "cactus", category: "Nature" },
+      { word: "puzzle", category: "Amazing things" }, { word: "backpack", category: "Amazing things" },
+      { word: "birthday", category: "Amazing things" }, { word: "castle", category: "Amazing things" },
+      { word: "fireworks", category: "Amazing things" }, { word: "friendship", category: "Amazing things" },
+      { word: "goggles", category: "Amazing things" }, { word: "jigsaw", category: "Amazing things" },
+      { word: "jungle", category: "Amazing things" }, { word: "lantern", category: "Amazing things" },
+      { word: "library", category: "Amazing things" }, { word: "magnet", category: "Amazing things" },
+      { word: "monster", category: "Amazing things" }, { word: "mystery", category: "Amazing things" },
+      { word: "pirate", category: "Amazing things" }, { word: "robot", category: "Amazing things" },
+      { word: "spaceship", category: "Amazing things" }, { word: "telescope", category: "Amazing things" },
+      { word: "treasure", category: "Amazing things" }, { word: "umbrella", category: "Amazing things" },
+      { word: "adventure", category: "Amazing things" }, { word: "balloon", category: "Amazing things" },
+      { word: "crayon", category: "Amazing things" }, { word: "discovery", category: "Amazing things" },
+      { word: "explorer", category: "Amazing things" }, { word: "footprint", category: "Amazing things" },
+      { word: "marble", category: "Amazing things" }, { word: "playground", category: "Amazing things" },
+      { word: "storybook", category: "Amazing things" }, { word: "spacesuit", category: "Amazing things" }
     ];
     const parts = ["antenna", "head", "body", "left-arm", "right-arm", "legs"];
     const wordElement = document.querySelector("#word");
@@ -525,6 +577,7 @@
     let mistakes = 0;
     let finished = false;
     let previousWord = "";
+    let wordPool = [...words];
     let playerName = "";
     let nameStorageAvailable = true;
 
@@ -573,6 +626,25 @@
       }
       if (!/^[A-Za-z0-9 _-]{1,18}$/.test(playerName)) playerName = "";
       playerNameElement.textContent = playerName || "guest";
+    }
+
+    async function loadCustomWords() {
+      if (!hasLeaderboardConfig()) return;
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/game_words?select=word,category`,
+          { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+        );
+        if (!response.ok) throw new Error(`Word list request failed (${response.status}).`);
+        const customWords = await response.json();
+        const combined = new Map(words.map((entry) => [entry.word, entry]));
+        for (const entry of customWords) {
+          combined.set(entry.word, entry);
+        }
+        wordPool = [...combined.values()];
+      } catch (error) {
+        console.error("Could not load grown-up-added words:", error);
+      }
     }
 
     async function loadLeaderboard() {
@@ -643,7 +715,7 @@
     }
 
     function startGame() {
-      const choices = words.filter((entry) => entry.word !== previousWord);
+      const choices = wordPool.filter((entry) => entry.word !== previousWord);
       const choice = choices[Math.floor(Math.random() * choices.length)];
       answer = choice.word;
       previousWord = answer;
@@ -736,7 +808,9 @@
     loadPlayerName();
     if (!playerName) showNameDialog();
     loadLeaderboard();
-    startGame();
+    loadCustomWords().then(() => {
+      startGame();
+    });
   </script>
 </body>
 </html>
