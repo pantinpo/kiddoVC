@@ -3,8 +3,439 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>kiddoVC</title>
+  <meta name="theme-color" content="#fff9ed">
+  <title>Mystery Word — a word guessing game</title>
+  <style>
+    :root {
+      font-family: "Trebuchet MS", "Comic Sans MS", sans-serif;
+      color: #30274b;
+      background: #fff9ed;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --purple: #7556db;
+      --purple-dark: #5438b6;
+      --ink: #30274b;
+      --muted: #756e83;
+      --card: #ffffff;
+      --mint: #c9f4e2;
+      --pink: #ffe0e8;
+      --yellow: #ffdf85;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px 18px 42px;
+      background:
+        radial-gradient(ellipse at 8% 12%, #ffe7a9 0 5px, transparent 6px),
+        radial-gradient(ellipse at 91% 23%, #d7ccff 0 7px, transparent 8px),
+        radial-gradient(ellipse at 13% 82%, #ffcbd8 0 6px, transparent 7px),
+        radial-gradient(ellipse at 88% 78%, #bcefd8 0 5px, transparent 6px),
+        #fff9ed;
+    }
+
+    button { font: inherit; }
+
+    .game {
+      width: min(100%, 720px);
+      margin: 0 auto;
+    }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--purple-dark);
+      font-size: .82rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .topline span { font-size: 1.3rem; }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(2.35rem, 8vw, 4rem);
+      letter-spacing: -.055em;
+      line-height: 1;
+    }
+
+    .intro {
+      margin: 13px 0 25px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 1.05rem;
+    }
+
+    .card {
+      padding: clamp(20px, 5vw, 34px);
+      border: 2px solid #eee8f7;
+      border-radius: 28px;
+      background: var(--card);
+      box-shadow: 0 14px 40px #48377712;
+    }
+
+    .game-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .category-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .85rem;
+      font-weight: 700;
+    }
+
+    .category {
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: #f0ebff;
+      color: var(--purple-dark);
+      font-size: .86rem;
+      font-weight: 800;
+    }
+
+    .tries {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tries strong {
+      color: var(--ink);
+      font-size: 1.05rem;
+    }
+
+    .robot-wrap {
+      display: grid;
+      place-items: center;
+      height: 180px;
+      margin: 7px auto 3px;
+    }
+
+    .robot {
+      width: 170px;
+      height: 170px;
+      overflow: visible;
+    }
+
+    .robot-part {
+      opacity: 0;
+      transition: opacity .25s ease, transform .25s ease;
+      transform: translateY(5px);
+    }
+
+    .robot-part.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .word {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: clamp(6px, 2vw, 13px);
+      margin: 8px 0 15px;
+    }
+
+    .letter-slot {
+      display: grid;
+      width: clamp(30px, 8vw, 48px);
+      height: 54px;
+      place-items: center;
+      border-bottom: 4px solid #d8d1e8;
+      color: var(--ink);
+      font-size: clamp(1.3rem, 5vw, 2rem);
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .letter-slot.revealed { border-color: var(--purple); }
+    .letter-slot.missed { color: #df6685; border-color: #f3b4c5; }
+
+    .message {
+      min-height: 30px;
+      margin: 0 0 15px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .98rem;
+      font-weight: 700;
+    }
+
+    .message.win { color: #278558; }
+    .message.lose { color: #c44d6d; }
+
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .key {
+      min-height: 46px;
+      border: 0;
+      border-radius: 13px;
+      background: #f2eff9;
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease, color .12s ease;
+    }
+
+    .key:hover:not(:disabled) {
+      transform: translateY(-2px);
+      background: #e6defd;
+    }
+
+    .key:focus-visible, .play-again:focus-visible {
+      outline: 3px solid #ffad53;
+      outline-offset: 3px;
+    }
+
+    .key:disabled { cursor: default; }
+    .key.correct { background: var(--mint); color: #246d4e; }
+    .key.wrong { background: var(--pink); color: #aa4761; }
+
+    .bottom-row {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .keyboard-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: .83rem;
+    }
+
+    .play-again {
+      display: none;
+      padding: 12px 17px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--purple);
+      color: white;
+      font-size: .9rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 0 var(--purple-dark);
+    }
+
+    .play-again:hover { background: var(--purple-dark); }
+    .play-again.visible { display: inline-block; }
+
+    .footer-note {
+      margin: 17px 0 0;
+      color: #938ba1;
+      text-align: center;
+      font-size: .8rem;
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 22px 12px 30px; }
+      .intro { margin-bottom: 19px; }
+      .card { border-radius: 23px; }
+      .keyboard { gap: 7px; }
+      .key { min-height: 43px; border-radius: 11px; }
+      .bottom-row { align-items: flex-start; flex-direction: column; }
+      .play-again.visible { align-self: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
 </head>
 <body>
+  <main class="game">
+    <div class="topline"><span aria-hidden="true">✦</span> A little word game <span aria-hidden="true">✦</span></div>
+    <h1>Mystery Word</h1>
+    <p class="intro">Guess the hidden word and build a little robot, one piece at a time!</p>
+
+    <section class="card" aria-label="Hangman word guessing game">
+      <div class="game-top">
+        <div class="category-label">Your clue <span class="category" id="category">Animals</span></div>
+        <div class="tries"><strong id="tries">6</strong> tries left</div>
+      </div>
+
+      <div class="robot-wrap">
+        <svg class="robot" viewBox="0 0 180 180" role="img" aria-label="A friendly robot being built">
+          <g fill="none" stroke="#5d48a2" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <g id="part-antenna" class="robot-part"><path d="M90 20v14"/><circle cx="90" cy="14" r="7" fill="#ffcf5c" stroke="#5d48a2"/></g>
+            <g id="part-head" class="robot-part">
+              <rect x="51" y="35" width="78" height="57" rx="17" fill="#cbbaff"/>
+              <circle cx="75" cy="59" r="5" fill="#30274b" stroke="none"/>
+              <circle cx="105" cy="59" r="5" fill="#30274b" stroke="none"/>
+              <path d="M76 75q14 12 28 0" stroke="#30274b" stroke-width="4"/>
+              <path d="M51 57H40m89 0h11" stroke="#5d48a2"/>
+            </g>
+            <g id="part-body" class="robot-part">
+              <rect x="62" y="98" width="56" height="45" rx="12" fill="#9ee7ca"/>
+              <circle cx="90" cy="120" r="8" fill="#fff" stroke="#5d48a2" stroke-width="4"/>
+            </g>
+            <g id="part-left-arm" class="robot-part"><path d="M63 108l-17 12 3 13"/></g>
+            <g id="part-right-arm" class="robot-part"><path d="M117 108l17 12-3 13"/></g>
+            <g id="part-legs" class="robot-part"><path d="M77 144v14m26-14v14"/><path d="M66 160h20m8 0h20"/></g>
+          </g>
+          <g fill="#ffb0c5">
+            <path d="M37 35c-5-6-14 1-5 9l5 5 5-5c9-8 0-15-5-9z"/>
+            <path d="M145 74c-4-5-11 1-4 7l4 4 4-4c7-6 0-12-4-7z"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="word" id="word" aria-label="Hidden word"></div>
+      <p class="message" id="message" aria-live="polite">Pick a letter to start guessing!</p>
+      <div class="keyboard" id="keyboard" aria-label="Letter choices"></div>
+
+      <div class="bottom-row">
+        <p class="keyboard-hint">Tip: you can click a letter or type it on your keyboard.</p>
+        <button class="play-again" id="play-again" type="button">Play again ✨</button>
+      </div>
+    </section>
+    <p class="footer-note">Wrong guesses build your robot. You have got this!</p>
+  </main>
+
+  <script>
+    const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+    const words = [
+      { word: "butterfly", category: "Animals" },
+      { word: "dinosaur", category: "Animals" },
+      { word: "elephant", category: "Animals" },
+      { word: "unicorn", category: "Animals" },
+      { word: "penguin", category: "Animals" },
+      { word: "rainbow", category: "Nature" },
+      { word: "sunshine", category: "Nature" },
+      { word: "volcano", category: "Nature" },
+      { word: "strawberry", category: "Yummy things" },
+      { word: "pancakes", category: "Yummy things" },
+      { word: "cupcake", category: "Yummy things" },
+      { word: "spaceship", category: "Amazing things" },
+      { word: "treasure", category: "Amazing things" },
+      { word: "birthday", category: "Amazing things" }
+    ];
+    const parts = ["antenna", "head", "body", "left-arm", "right-arm", "legs"];
+    const wordElement = document.querySelector("#word");
+    const keyboardElement = document.querySelector("#keyboard");
+    const messageElement = document.querySelector("#message");
+    const triesElement = document.querySelector("#tries");
+    const categoryElement = document.querySelector("#category");
+    const playAgainButton = document.querySelector("#play-again");
+    let answer;
+    let guessed = new Set();
+    let mistakes = 0;
+    let finished = false;
+    let previousWord = "";
+
+    function startGame() {
+      const choices = words.filter((entry) => entry.word !== previousWord);
+      const choice = choices[Math.floor(Math.random() * choices.length)];
+      answer = choice.word;
+      previousWord = answer;
+      guessed = new Set();
+      mistakes = 0;
+      finished = false;
+      categoryElement.textContent = choice.category;
+      triesElement.textContent = String(parts.length);
+      messageElement.textContent = "Pick a letter to start guessing!";
+      messageElement.className = "message";
+      playAgainButton.classList.remove("visible");
+
+      parts.forEach((part) => document.querySelector(`#part-${part}`).classList.remove("show"));
+      renderWord();
+      renderKeyboard();
+    }
+
+    function renderWord() {
+      wordElement.replaceChildren();
+      for (const letter of answer) {
+        const slot = document.createElement("span");
+        const isGuessed = guessed.has(letter);
+        slot.className = `letter-slot${isGuessed ? " revealed" : ""}${finished && !isGuessed ? " missed" : ""}`;
+        slot.textContent = isGuessed || finished ? letter : "";
+        slot.setAttribute("aria-hidden", "true");
+        wordElement.append(slot);
+      }
+      wordElement.setAttribute(
+        "aria-label",
+        `Word: ${[...answer].map((letter) => guessed.has(letter) || finished ? letter : "blank").join(" ")}`
+      );
+    }
+
+    function renderKeyboard() {
+      keyboardElement.replaceChildren();
+      for (const letter of alphabet) {
+        const key = document.createElement("button");
+        key.className = "key";
+        key.type = "button";
+        key.textContent = letter.toUpperCase();
+        key.setAttribute("aria-label", `Guess ${letter.toUpperCase()}`);
+        key.disabled = guessed.has(letter) || finished;
+        if (guessed.has(letter)) {
+          key.classList.add(answer.includes(letter) ? "correct" : "wrong");
+        }
+        key.addEventListener("click", () => guess(letter));
+        keyboardElement.append(key);
+      }
+    }
+
+    function guess(letter) {
+      if (finished || guessed.has(letter) || !alphabet.includes(letter)) return;
+      guessed.add(letter);
+
+      if (answer.includes(letter)) {
+        messageElement.textContent = "Nice guess! That letter is in the word.";
+      } else {
+        mistakes += 1;
+        document.querySelector(`#part-${parts[mistakes - 1]}`).classList.add("show");
+        triesElement.textContent = String(parts.length - mistakes);
+        messageElement.textContent = "Not that one—but keep going, you can do it!";
+      }
+
+      const solved = [...answer].every((character) => guessed.has(character));
+      if (solved) {
+        finished = true;
+        messageElement.textContent = "You got it! Your robot is cheering for you! 🎉";
+        messageElement.className = "message win";
+      } else if (mistakes === parts.length) {
+        finished = true;
+        messageElement.textContent = `The word was ${answer.toUpperCase()}. Try another one!`;
+        messageElement.className = "message lose";
+      }
+
+      renderWord();
+      renderKeyboard();
+      if (finished) playAgainButton.classList.add("visible");
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
+      guess(event.key.toLowerCase());
+    });
+
+    playAgainButton.addEventListener("click", startGame);
+    startGame();
+  </script>
 </body>
 </html>
